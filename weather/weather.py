@@ -1,52 +1,62 @@
 import requests
+import sys
+
+def main():
+    while True :
+        try :
+            city = input("Enter city name: ")
+
+        except EOFError :
+            print()
+            sys.exit()
+
+        else :
+            with open("city.csv") as file :
+                lines = [line.strip().split(",") for line in file]
+                for i in range(len(lines)):
+                    if city in lines[i][0]:
+                        get_weather(city)
+                        sys.exit()
+                    else :
+                        continue
+                print("city not found")
+                continue
 
 
 def get_weather(city):
     api_key = "gmvH4TaiHlYRF1WOzZpFfwDDVcg2aFvJ"
     base_url = "https://api.tomorrow.io/v4/weather/forecast"
+    params = {
+        "location" : city,
+        "apikey" : api_key,
+        "timelines" : "1h",
+        "units" : "metric"
+        }
 
-    # Queries :
-    params = {"location": city, "apikey": api_key, "timelines": "1h", "units": "metric"}
+    try :
+        url = requests.get(base_url, params = params)
 
-    # check if the city exists :
-    with open("city.csv") as file:
-        lines = [line.strip().split(",") for line in file]
+    except Exception as e :
+        print(f"Sorry! An Error appeared {e}")
+        sys.exit()
 
-        for i in range(len(lines)):
-            if city in lines[i][0]:
+    else :
+        data = url.json()
 
-                # request of accessing data / return in JSON format
-                url = requests.get(base_url, params=params)
-
-                # requests is succesful
-                if url.status_code == 200:
-                    # we transform the JSON format into dictionaries in python
-                    data = url.json()
-
-                    try:
-                        time = data["timelines"]["hourly"][0]["time"]
-                        temperature = data["timelines"]["hourly"][0]["values"][
-                            "temperature"
-                        ]
-
-                        print(f"City  :  {city}")
-                        print(f"Time  : {time}")
-                        print(f"Temperature : {temperature}")
-
-                    except KeyError:
-                        print("missing keyword!!")
-
-                else:
-                    print(url.status_code)
-
-            else:
-                continue
-
-        print("City Not Found")
-
-    return
+        timelines = data["timelines"]["hourly"][0]["time"]
+        temperature = data["timelines"]["hourly"][0]["values"]["temperature"]
 
 
-city = input("Enter city name : ")
+        print(f"city : {city}")
+        print(f"timelines : {timelines}")
+        print(f"tempertaure : {temperature}")
 
-get_weather(city)
+
+        return
+
+
+
+
+main()
+
+
